@@ -29,8 +29,7 @@ public class MainMenuController : MonoBehaviour
 
     public void OpenOptions()
     {
-        Debug.Log("Options Panel opened (implement later, e.g., show a hidden panel)");
-        // TODO: Add code to show options UI if needed
+        SceneManager.LoadScene("Options");
     }
 
     public void QuitGame()
