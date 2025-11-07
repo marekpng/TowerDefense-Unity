@@ -3,17 +3,14 @@ using UnityEngine.UI;
 
 public class PlacementManager : MonoBehaviour
 {
-    [Header("Towers")]
-    public GameObject selectedTowerPrefab;   // Set by UI buttons
-    public GameObject turretPrefab;          // Default turret prefab
+    [Header("Tower Placement")]
+    [Tooltip("Prefab that includes both the tower base and turret.")]
+    public GameObject turretPrefab;          // Combined prefab (Tower + Turret)
     public int towerCost = 50;
 
-    [Header("Layers")]
-    [Tooltip("Select the Ground layer used for placement.")]
-    public LayerMask groundLayer = 1 << 3;   // Ground layer (Layer 3)
-
-    [Header("UI Feedback")]
-    public Button turretButton;              // Assign TurretButton in Inspector
+    [Header("UI")]
+    [Tooltip("Assign the turret button from your UI here.")]
+    public Button turretButton;              // Button in bottom center UI
 
     private bool placementMode = false;
 
@@ -22,40 +19,61 @@ public class PlacementManager : MonoBehaviour
         if (Camera.main == null)
             return;
 
-        // --- LEFT CLICK: place turret ---
-        if (Input.GetMouseButtonDown(0) && placementMode && selectedTowerPrefab != null)
+        // --- LEFT CLICK: Place turret on a BuildSpot ---
+        if (Input.GetMouseButtonDown(0) && placementMode && turretPrefab != null)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f, groundLayer))
+            if (Physics.Raycast(ray, out RaycastHit hit, 100f))
             {
-                if (GameManager.Instance.SpendMoney(towerCost))
+                BuildSpot spot = hit.collider.GetComponent<BuildSpot>();
+
+                if (spot != null && !spot.isOccupied)
                 {
-                    Vector3 spawnPos = hit.point + Vector3.up * 0.5f; // Lift a bit above ground
-                    Instantiate(selectedTowerPrefab, spawnPos, Quaternion.identity);
-                    Deselect();
+                    // Check if player can afford
+                    if (GameManager.Instance.SpendMoney(towerCost))
+                    {
+                        // Place tower
+                        spot.PlaceTower(turretPrefab);
+
+                        // Pass cost info to the TurretSell script (for refunds)
+                        if (spot.placedTower != null)
+                        {
+                            TurretSell sell = spot.placedTower.GetComponent<TurretSell>();
+                            if (sell != null)
+                                sell.cost = towerCost;
+                        }
+
+                        Deselect();
+                    }
+                    else
+                    {
+                        Debug.Log("❌ Not enough money to place tower!");
+                    }
+                }
+                else
+                {
+                    Debug.Log("⚠️ Not a valid build spot or already occupied!");
                 }
             }
         }
 
-        // --- RIGHT CLICK: cancel placement ---
+        // --- RIGHT CLICK: Cancel placement ---
         if (Input.GetMouseButtonDown(1))
         {
             Deselect();
         }
     }
 
-    // Called by turret button
+    // Called by the turret UI button
     public void SelectTurret()
     {
-        selectedTowerPrefab = turretPrefab;
         placementMode = true;
         UpdateButtonFeedback();
     }
 
     private void Deselect()
     {
-        selectedTowerPrefab = null;
         placementMode = false;
         UpdateButtonFeedback();
     }
