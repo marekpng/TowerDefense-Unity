@@ -2685,6 +2685,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   waypoints: []
   speed: 5
+  rotationSpeed: 10
 --- !u!114 &1272502057902938858
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2698,6 +2699,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHealth: 100
+  deathDelay: 2
 --- !u!1 &6586335901051139360
 GameObject:
   m_ObjectHideFlags: 0

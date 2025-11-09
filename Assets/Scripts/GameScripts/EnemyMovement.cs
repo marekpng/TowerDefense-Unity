@@ -7,66 +7,88 @@ public class EnemyMovement : MonoBehaviour
     public Transform[] waypoints;
     [Header("Stats")]
     public float speed = 5f;
+    [Header("Rotation")]
+    public float rotationSpeed = 10f;
 
-    [Header("Animator")]
-    private Animator animator;  // Pridaj reference
-
+    private Animator animator;
     private int currentWaypoint = 0;
     private bool isAttacking = false;
+    private bool isDead = false;
 
     void Start()
     {
-        animator = GetComponent<Animator>();
-        if (animator == null) animator = GetComponentInChildren<Animator>();
+        animator = GetComponentInChildren<Animator>();
 
-        // Auto waypoints
+        // Auto-find waypoints if not assigned
         if (waypoints.Length == 0)
         {
             Transform path = GameObject.Find("Path")?.transform;
-            if (path) {
+            if (path)
+            {
                 waypoints = new Transform[path.childCount];
                 for (int i = 0; i < path.childCount; i++)
                     waypoints[i] = path.GetChild(i);
             }
         }
 
-        // Start Run anim
-        SetRunning(true);
+        // ✅ Start running immediately
+        if (animator)
+        {
+            animator.SetBool("isRunning", true);
+            animator.SetBool("isDead", false);
+            animator.SetBool("isAttacking", false);
+        }
     }
 
     void Update()
     {
+        if (isDead) return;
+
         if (currentWaypoint < waypoints.Length && !isAttacking)
         {
             Vector3 direction = (waypoints[currentWaypoint].position - transform.position).normalized;
-            transform.Translate(direction * speed * Time.deltaTime, Space.World);
 
+            // Smooth rotation
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+
+            // Move forward
+            transform.Translate(Vector3.forward * speed * Time.deltaTime, Space.Self);
+
+            // Check distance to waypoint
             if (Vector3.Distance(transform.position, waypoints[currentWaypoint].position) < 0.5f)
-            {
                 currentWaypoint++;
-            }
         }
         else if (!isAttacking)
         {
-            // Dosiahol koniec - Attack!
             StartCoroutine(AttackAndDestroy());
         }
     }
 
-    void SetRunning(bool running)
+    public void Die()
     {
-        if (animator) animator.SetBool("isRunning", running);
+        if (isDead) return;
+        isDead = true;
+
+        // Stop movement
+        if (animator)
+        {
+            animator.SetBool("isRunning", false);
+            animator.SetBool("isAttacking", false);
+            animator.SetBool("isDead", true);
+        }
     }
 
     IEnumerator AttackAndDestroy()
     {
         isAttacking = true;
-        SetRunning(false);
-        if (animator) animator.SetBool("isAttacking", true);
+        if (animator)
+        {
+            animator.SetBool("isRunning", false);
+            animator.SetBool("isAttacking", true);
+        }
 
-        // Počkaj dĺžku animácie (Z_Attack ~1s)
-        yield return new WaitForSeconds(1.2f);  // Nastav podľa anim (Animator > Length)
-
-        Destroy(gameObject);  // Destroy po útoku
+        yield return new WaitForSeconds(1.2f);
+        Destroy(gameObject);
     }
 }
