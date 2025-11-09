@@ -1,20 +1,22 @@
 using UnityEngine;
+using System.Collections;
 
 public class EnemyHealth : MonoBehaviour
 {
-    [Header("Stats")]
-    public float maxHealth = 50f;
-    public float currentHealth;
+    public int maxHealth = 100;
+    private int health;
+    private Animator animator;
 
     void Start()
     {
-        currentHealth = maxHealth;
+        health = maxHealth;
+        animator = GetComponentInChildren<Animator>();
     }
 
-    public void TakeDamage(float damage)
+    public void TakeDamage(int damage)
     {
-        currentHealth -= damage;
-        if (currentHealth <= 0)
+        health -= damage;
+        if (health <= 0)
         {
             Die();
         }
@@ -22,7 +24,22 @@ public class EnemyHealth : MonoBehaviour
 
     void Die()
     {
-		GameManager.Instance.AddMoney(10);
+        // ZASTAV POHYB!
+        EnemyMovement movement = GetComponent<EnemyMovement>();
+        if (movement) movement.enabled = false;
+
+        GameManager.Instance.AddMoney(10);
+        StartCoroutine(DeathAnimation());
+    }
+
+    IEnumerator DeathAnimation()
+    {
+        if (animator)
+        {
+            animator.SetBool("isDead", true);
+            animator.SetBool("isRunning", false);
+        }
+        yield return new WaitForSeconds(1.5f);
         Destroy(gameObject);
     }
 }

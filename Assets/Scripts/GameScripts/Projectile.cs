@@ -3,10 +3,10 @@ using UnityEngine;
 public class Projectile : MonoBehaviour
 {
     private Transform target;
-    private float damage;
+    private int damage;
     public float speed = 50f;
 
-    public void SetTarget(Transform t, float dmg)
+    public void SetTarget(Transform t, int dmg)
     {
         target = t;
         damage = dmg;
@@ -23,7 +23,7 @@ public class Projectile : MonoBehaviour
         Vector3 dir = target.position - transform.position;
         transform.Translate(dir.normalized * speed * Time.deltaTime, Space.World);
 
-        if (Vector3.Distance(transform.position, target.position) < 0.5f)
+        if (Vector3.Distance(transform.position, target.position) < 1f)
         {
             Hit();
         }
@@ -33,7 +33,8 @@ public class Projectile : MonoBehaviour
     {
         if (target != null)
         {
-            target.GetComponent<EnemyHealth>().TakeDamage(damage);
+            EnemyHealth health = target.GetComponent<EnemyHealth>();
+            if (health) health.TakeDamage(damage);
         }
         Destroy(gameObject);
     }

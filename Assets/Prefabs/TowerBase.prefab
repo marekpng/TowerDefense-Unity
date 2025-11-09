@@ -241,7 +241,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Tower
   range: 10
   fireRate: 1
-  damage: 15
+  damage: 20
   projectilePrefab: {fileID: 6129091996983225270, guid: 40e077403bc4c684483c8b18e575b2ee, type: 3}
 --- !u!114 &-8859793219375370385
 MonoBehaviour:

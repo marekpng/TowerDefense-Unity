@@ -6,16 +6,16 @@ public class Tower : MonoBehaviour
     [Header("Stats")]
     public float range = 10f;
     public float fireRate = 1f;
-    public float damage = 25f;
-    public GameObject projectilePrefab; // Create later
+    public int damage = 20;  // ZVÝŠENÉ na 20! (nastav v Inspectore ak chceš rôzne veže)
+
+    public GameObject projectilePrefab;
 
     private Transform target;
     private float fireCountdown = 0f;
 
     void Update()
     {
-        // Find nearest enemy in range
-        Collider[] enemiesInRange = Physics.OverlapSphere(transform.position, range, LayerMask.GetMask("Default")); // Enemy layer default
+        Collider[] enemiesInRange = Physics.OverlapSphere(transform.position, range, LayerMask.GetMask("Default"));
         var enemy = enemiesInRange
             .Where(c => c.CompareTag("Enemy"))
             .OrderBy(c => Vector3.Distance(transform.position, c.transform.position))
@@ -42,8 +42,9 @@ public class Tower : MonoBehaviour
 
     void Shoot()
     {
-        // Instantiate projectile at turret head
-        GameObject proj = Instantiate(projectilePrefab, transform.Find("TurretHead").position, Quaternion.identity);
+        Transform head = transform.Find("TurretHead");
+        Vector3 spawnPos = head.position + head.forward * 1f;  // Offset: Žiadny trigger s TurretHead
+        GameObject proj = Instantiate(projectilePrefab, spawnPos, head.rotation);
         Projectile p = proj.GetComponent<Projectile>();
         p.SetTarget(target, damage);
     }
