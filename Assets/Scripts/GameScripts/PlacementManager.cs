@@ -3,88 +3,103 @@ using UnityEngine.UI;
 
 public class PlacementManager : MonoBehaviour
 {
-    [Header("Tower Placement")]
-    [Tooltip("Prefab that includes both the tower base and turret.")]
-    public GameObject turretPrefab;          // Combined prefab (Tower + Turret)
-    public int towerCost = 50;
+    [Header("Tower Types")]
+    [Tooltip("Basic Tower - $100")]
+    public GameObject basicTowerPrefab;   // TowerBase prefab
+    [Tooltip("Rapid Tower - $150")]
+    public GameObject rapidTowerPrefab;   // RapidFireCannon prefab
+    [Tooltip("Heavy Tower - $200")]
+    public GameObject heavyTowerPrefab;   // RapidFireCannon_2 prefab
 
-    [Header("UI")]
-    [Tooltip("Assign the turret button from your UI here.")]
-    public Button turretButton;              // Button in bottom center UI
+    private int[] towerCosts = {100, 150, 200};  // Matches prefab order above
 
+    [Header("UI Buttons")]
+    public Button basicButton;
+    public Button rapidButton;
+    public Button heavyButton;
+
+    private GameObject selectedPrefab;
+    private int selectedCost;
     private bool placementMode = false;
 
     void Update()
+{
+    if (Input.GetMouseButtonDown(0) && placementMode && selectedPrefab != null)
     {
-        if (Camera.main == null)
-            return;
-
-        // --- LEFT CLICK: Place turret on a BuildSpot ---
-        if (Input.GetMouseButtonDown(0) && placementMode && turretPrefab != null)
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit))
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-            if (Physics.Raycast(ray, out RaycastHit hit, 100f))
+            BuildSpot spot = hit.collider.GetComponent<BuildSpot>();
+            if (spot != null && !spot.isOccupied)
             {
-                BuildSpot spot = hit.collider.GetComponent<BuildSpot>();
-
-                if (spot != null && !spot.isOccupied)
+                // 💰 Spend money only when building is valid
+                if (GameManager.Instance.SpendMoney(selectedCost))
                 {
-                    // Check if player can afford
-                    if (GameManager.Instance.SpendMoney(towerCost))
-                    {
-                        // Place tower
-                        spot.PlaceTower(turretPrefab);
-
-                        // Pass cost info to the TurretSell script (for refunds)
-                        if (spot.placedTower != null)
-                        {
-                            TurretSell sell = spot.placedTower.GetComponent<TurretSell>();
-                            if (sell != null)
-                                sell.cost = towerCost;
-                        }
-
-                        Deselect();
-                    }
-                    else
-                    {
-                        Debug.Log("❌ Not enough money to place tower!");
-                    }
-                }
-                else
-                {
-                    Debug.Log("⚠️ Not a valid build spot or already occupied!");
+                    spot.PlaceTower(selectedPrefab);
+                    TurretSell sell = spot.placedTower.GetComponent<TurretSell>();
+                    if (sell != null) sell.cost = selectedCost;
+                    Deselect();
                 }
             }
         }
-
-        // --- RIGHT CLICK: Cancel placement ---
-        if (Input.GetMouseButtonDown(1))
-        {
-            Deselect();
-        }
     }
 
-    // Called by the turret UI button
-    public void SelectTurret()
+    if (Input.GetMouseButtonDown(1))
+        Deselect();
+}
+
+
+    // Called by Basic button OnClick
+    public void SelectBasic() { SelectTower(0, basicTowerPrefab); }
+    // Called by Rapid button OnClick
+    public void SelectRapid() { SelectTower(1, rapidTowerPrefab); }
+    // Called by Heavy button OnClick
+    public void SelectHeavy() { SelectTower(2, heavyTowerPrefab); }
+
+    private void SelectTower(int index, GameObject prefab)
     {
+        selectedPrefab = prefab;
+        selectedCost = towerCosts[index];
         placementMode = true;
         UpdateButtonFeedback();
     }
 
     private void Deselect()
     {
+        selectedPrefab = null;
         placementMode = false;
         UpdateButtonFeedback();
     }
 
     private void UpdateButtonFeedback()
     {
-        if (turretButton != null)
+        Color activeColor = Color.yellow;
+        Color inactiveColor = Color.white;
+
+        // Robust color update with null checks
+        SetButtonColor(basicButton, placementMode && selectedPrefab == basicTowerPrefab ? activeColor : inactiveColor);
+        SetButtonColor(rapidButton, placementMode && selectedPrefab == rapidTowerPrefab ? activeColor : inactiveColor);
+        SetButtonColor(heavyButton, placementMode && selectedPrefab == heavyTowerPrefab ? activeColor : inactiveColor);
+    }
+
+    private void SetButtonColor(Button btn, Color c)
+    {
+        if (btn != null)
         {
-            var colors = turretButton.colors;
-            colors.normalColor = placementMode ? Color.yellow : Color.white;
-            turretButton.colors = colors;
+            ColorBlock block = GetColorBlock(c);
+            btn.colors = block;
         }
+    }
+
+    private ColorBlock GetColorBlock(Color normalColor)
+    {
+        ColorBlock block = new ColorBlock();
+        block.normalColor = normalColor;
+        block.highlightedColor = normalColor * 1.1f;  // Slight brighten on hover
+        block.pressedColor = normalColor * 0.8f;     // Darken on click
+        block.selectedColor = normalColor;
+        block.colorMultiplier = 1f;
+        block.fadeDuration = 0.1f;
+        return block;
     }
 }

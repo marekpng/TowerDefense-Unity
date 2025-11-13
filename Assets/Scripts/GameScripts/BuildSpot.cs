@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class BuildSpot : MonoBehaviour
 {
-    [HideInInspector] public bool isOccupied = false;   // One tower per spot
-    [HideInInspector] public GameObject placedTower;    // Reference to the tower on this spot
+    [HideInInspector] public bool isOccupied = false;
+    [HideInInspector] public GameObject placedTower;  // FIXED: Teraz sa priradí v PlaceTower
 
     private Renderer rend;
     private Color originalColor;
@@ -18,7 +18,7 @@ public class BuildSpot : MonoBehaviour
     void OnMouseEnter()
     {
         if (rend != null && !isOccupied)
-            rend.material.color = Color.green; // Highlight available spot
+            rend.material.color = Color.green; // Highlight available
     }
 
     void OnMouseExit()
@@ -31,36 +31,39 @@ public class BuildSpot : MonoBehaviour
     /// Places a tower on this build spot.
     /// </summary>
     public void PlaceTower(GameObject towerPrefab)
-	{
-    if (isOccupied) return;
+    {
+        if (isOccupied) return;
 
-    // Instantiate tower slightly above the build spot
-    GameObject tower = Instantiate(towerPrefab, transform.position, Quaternion.identity);
+        // Instantiate tower
+        GameObject tower = Instantiate(towerPrefab, transform.position, Quaternion.identity);
+        tower.transform.SetParent(transform, worldPositionStays: true);  // Parent pre organizáciu
 
-    // Optional: parent it for organization (but keep world position)
-    tower.transform.SetParent(transform, worldPositionStays: true);
+        // Y offset: Na vrch spotu (uprav 0.5f podľa prefab veľkosti)
+        Renderer towerRend = tower.GetComponent<Renderer>();
+        if (towerRend != null)
+        {
+            Vector3 pos = tower.transform.position;
+            pos.y = transform.position.y + towerRend.bounds.extents.y;
+            tower.transform.position = pos;
+        }
 
-    // Adjust Y offset if needed (you can tweak 0.5f or 1f depending on prefab size)
-    Vector3 pos = tower.transform.position;
-    pos.y = transform.position.y + tower.GetComponent<Renderer>().bounds.extents.y;
-    tower.transform.position = pos;
+        placedTower = tower;  // FIXED: Priradí reference – PlacementManager môže GetComponent<TurretSell>()
 
-    isOccupied = true;
-    rend.material.color = Color.red;
-	}
-
-
-
+        isOccupied = true;
+        if (rend != null) rend.material.color = Color.red;  // Occupied = red
+    }
 
     /// <summary>
-    /// Frees the build spot when a tower is sold or destroyed.
+    /// Frees the build spot (sell/destroy tower).
     /// </summary>
     public void ClearSpot()
     {
+        if (placedTower != null)
+        {
+            Destroy(placedTower);  // Zničí tower
+        }
         isOccupied = false;
         placedTower = null;
-
-        if (rend != null)
-            rend.material.color = originalColor;
+        if (rend != null) rend.material.color = originalColor;
     }
 }
