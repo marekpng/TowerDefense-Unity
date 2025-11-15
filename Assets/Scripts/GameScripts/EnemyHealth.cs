@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System; // ← NOVÉ: Pre Action
 
 public class EnemyHealth : MonoBehaviour
 {
@@ -12,6 +13,9 @@ public class EnemyHealth : MonoBehaviour
     public float deathDelay = 0.2f;
     public bool IsDead => isDead;
 
+    // NOVÉ: Event na smrť
+    public event Action onDeath;
+
     void Start()
     {
         health = maxHealth;
@@ -21,9 +25,7 @@ public class EnemyHealth : MonoBehaviour
     public void TakeDamage(int damage)
     {
         if (isDead) return;
-
         health -= damage;
-
         if (health <= 0)
             Die();
     }
@@ -47,6 +49,10 @@ public class EnemyHealth : MonoBehaviour
             col.enabled = false;
 
         GameManager.Instance.AddMoney(10);
+
+        // NOVÉ: Hlás Spawneru smrť
+        onDeath?.Invoke();
+
         StartCoroutine(DeathRoutine());
     }
 
