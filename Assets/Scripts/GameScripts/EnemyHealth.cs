@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 public class EnemyHealth : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class EnemyHealth : MonoBehaviour
     public float deathDelay = 0.2f;
     public bool IsDead => isDead;
 
+    public event Action onDeath;
+
     void Start()
     {
         health = maxHealth;
@@ -21,14 +24,13 @@ public class EnemyHealth : MonoBehaviour
     public void TakeDamage(int damage)
     {
         if (isDead) return;
-
         health -= damage;
-
         if (health <= 0)
-            Die();
+            Die(false); // normálna smrť (s animáciou)
     }
 
-    void Die()
+    // NOVÉ: silentKill = true → žiadna animácia, len despawn
+    public void Die(bool silentKill = false)
     {
         if (isDead) return;
         isDead = true;
@@ -47,24 +49,40 @@ public class EnemyHealth : MonoBehaviour
             col.enabled = false;
 
         GameManager.Instance.AddMoney(10);
-        StartCoroutine(DeathRoutine());
+
+        // Hlásime Spawneru smrť (dôležité pre wave!)
+        onDeath?.Invoke();
+
+        if (silentKill)
+        {
+            // OKAMŽITÝ DESPAWN – žiadna animácia
+            Destroy(gameObject);
+        }
+        else
+        {
+            // Normálna death animácia + fade
+            StartCoroutine(DeathRoutine());
+        }
     }
 
     IEnumerator DeathRoutine()
     {
         yield return new WaitForSeconds(1.1f);
-        animator.enabled = false;
+        if (animator != null)
+            animator.enabled = false;
 
         float fadeTime = 0.5f;
         Vector3 start = transform.position;
-        Vector3 end = start - new Vector3(0, 1f, 0);
+        Vector3 end = start - Vector3.up;
         float elapsed = 0f;
+
         while (elapsed < fadeTime)
         {
             transform.position = Vector3.Lerp(start, end, elapsed / fadeTime);
             elapsed += Time.deltaTime;
             yield return null;
         }
+
         Destroy(gameObject);
     }
 }

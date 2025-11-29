@@ -1,6 +1,6 @@
 using UnityEngine;
 using TMPro;
-using UnityEngine.SceneManagement; // For restarting
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -15,7 +15,8 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI moneyText;
 
     [Header("Panels")]
-    public GameObject gameOverPanel; // assign this in Inspector (GameOverCanvas or child panel)
+    public GameObject gameOverPanel;
+    public GameObject victoryPanel;
 
     private bool isGameOver = false;
 
@@ -27,10 +28,10 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        Time.timeScale = 1f; // ensure normal time on start
+        Time.timeScale = 1f;
         UpdateUI();
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(false);
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
+        if (victoryPanel != null) victoryPanel.SetActive(false);
     }
 
     public bool SpendMoney(int amount)
@@ -52,46 +53,64 @@ public class GameManager : MonoBehaviour
 
     void UpdateUI()
     {
-        if (hpText != null)
-            hpText.text = "HP: " + playerHP;
-        if (moneyText != null)
-            moneyText.text = "$: " + money;
+        if (hpText != null) hpText.text = "HP: " + playerHP;
+        if (moneyText != null) moneyText.text = "$: " + money;
     }
 
     public void TakeDamage(int damage)
     {
         if (isGameOver) return;
-
-        Debug.Log("🎯 TAKE DAMAGE CALLED: -" + damage + " HP → " + (playerHP - damage));
         playerHP -= damage;
         UpdateUI();
-
         if (playerHP <= 0)
-        {
             GameOver();
-        }
     }
 
     private void GameOver()
     {
         isGameOver = true;
-        Debug.Log("💀 GAME OVER!");
         Time.timeScale = 0f;
-
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(true);
+        if (gameOverPanel != null) gameOverPanel.SetActive(true);
     }
 
-    // Optional: hook these to buttons
+    public void Victory()
+    {
+        Time.timeScale = 0f;
+        if (victoryPanel != null) victoryPanel.SetActive(true);
+    }
+
+    // Buttony
     public void RestartLevel()
     {
         Time.timeScale = 1f;
+        if (WaveManager.Instance != null)
+            WaveManager.Instance.ResetWaveManager();
+
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    public void QuitGame()
+    public void MainMenu()
     {
-        Debug.Log("Quitting game...");
-        Application.Quit();
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("MainMenu"); // Tvoja hlavná menu scéna
+    }
+
+    // NOVÉ: Automatický Next Level podľa aktuálnej scény
+    public void NextLevel()
+    {
+        Time.timeScale = 1f;
+
+        string currentScene = SceneManager.GetActiveScene().name;
+
+        string nextScene = currentScene switch
+        {
+            "Level1" => "Level2",
+            "Level2" => "Level3",
+            "Level3" => "Level4",
+            "Level4" => "MainMenu", // Po Level 4 → späť do menu
+            _ => "MainMenu" // Bezpečnostný fallback
+        };
+
+        SceneManager.LoadScene(nextScene);
     }
 }
