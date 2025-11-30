@@ -4,6 +4,7 @@ using System;
 
 public class EnemyHealth : MonoBehaviour
 {
+    public string enemyType = "Enemy";
     public int maxHealth = 100;
     private int health;
     private Animator animator;
@@ -25,6 +26,14 @@ public class EnemyHealth : MonoBehaviour
     {
         if (isDead) return;
         health -= damage;
+        GameLogger.Instance.LogEvent(
+            "enemyHit",
+            enemyType,
+            maxHealth,
+            health + damage,
+            damage,
+            health
+        );
         if (health <= 0)
             Die(false); // normálna smrť (s animáciou)
     }
@@ -48,6 +57,11 @@ public class EnemyHealth : MonoBehaviour
         if (TryGetComponent(out Collider col))
             col.enabled = false;
 
+        GameLogger.Instance.LogEnemyKilled(
+            enemyType,
+            -1,
+            10
+        );
         GameManager.Instance.AddMoney(10);
 
         // Hlásime Spawneru smrť (dôležité pre wave!)

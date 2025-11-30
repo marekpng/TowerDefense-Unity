@@ -127,8 +127,15 @@ public class Tower : MonoBehaviour
     Projectile p = proj.GetComponent<Projectile>();
     if (p != null)
     {
-        p.SetTarget(shootDirection, damage); // FIX: Smer namiesto target
+        p.SetTarget(shootDirection, damage);
     }
+    GameLogger.Instance.LogEvent(
+        "towerShot",
+        transform.position.x,
+        transform.position.y,
+        transform.position.z,
+        damage
+    );
 }
 
     void OnDrawGizmosSelected()

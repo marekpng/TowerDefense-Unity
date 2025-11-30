@@ -36,6 +36,12 @@ public class PlacementManager : MonoBehaviour
                 if (GameManager.Instance.SpendMoney(selectedCost))
                 {
                     spot.PlaceTower(selectedPrefab);
+                    Vector3 pos = spot.transform.position;
+                    GameLogger.Instance.LogTurretPlaced(
+                        selectedPrefab.name,
+                        pos.x, pos.y, pos.z,
+                        selectedCost
+                    );
                     TurretSell sell = spot.placedTower.GetComponent<TurretSell>();
                     if (sell != null) sell.cost = selectedCost;
                     Deselect();

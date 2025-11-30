@@ -101,6 +101,11 @@ public class WaveManager : MonoBehaviour
     {
         if (currentWave >= totalWaves) return;
 
+        GameLogger.Instance.LogWaveStart(
+            currentWave + 1,
+            currentWaves[currentWave].enemyCount
+        );
+
         WaveData wave = currentWaves[currentWave];
         if (spawner != null)
             spawner.SpawnWave(wave.enemyCount, 1f / wave.spawnRate);
@@ -112,6 +117,11 @@ public class WaveManager : MonoBehaviour
 
     public void WaveEnded()
     {
+        GameLogger.Instance.LogWaveEnd(
+            currentWave,
+            Time.timeSinceLevelLoad
+        );
+
         waveActive = false;
         if (currentWave < totalWaves)
         {

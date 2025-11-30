@@ -38,6 +38,7 @@ public class GameManager : MonoBehaviour
     {
         if (money >= amount)
         {
+            GameLogger.Instance.LogMoneyChange(money + amount, money, "spend");
             money -= amount;
             UpdateUI();
             return true;
@@ -47,6 +48,7 @@ public class GameManager : MonoBehaviour
 
     public void AddMoney(int amount)
     {
+        GameLogger.Instance.LogMoneyChange(money - amount, money, "gain");
         money += amount;
         UpdateUI();
     }
@@ -61,6 +63,7 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver) return;
         playerHP -= damage;
+        GameLogger.Instance.LogBaseDamage(damage, playerHP);
         UpdateUI();
         if (playerHP <= 0)
             GameOver();
