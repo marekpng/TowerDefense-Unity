@@ -2684,7 +2684,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
   waypoints: []
-  speed: 5
+  speed: 5.5
+  groundOffset: 0
   rotationSpeed: 10
 --- !u!114 &1272502057902938858
 MonoBehaviour:

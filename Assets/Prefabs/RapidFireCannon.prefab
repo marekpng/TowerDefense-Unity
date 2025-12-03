@@ -142,8 +142,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tower
   range: 12
-  fireRate: 1
-  damage: 30
+  fireRate: 2.2
+  damage: 18
   projectilePrefab: {fileID: 6129091996983225270, guid: 1e2bbe4ec5bdd4e4db05ba22b2a38c39, type: 3}
   burstDelay: 0.001
   zombieAimHeight: 2.8

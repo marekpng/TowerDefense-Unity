@@ -48,7 +48,7 @@ public class EnemyHealth : MonoBehaviour
         if (TryGetComponent(out Collider col))
             col.enabled = false;
 
-        GameManager.Instance.AddMoney(10);
+        GameManager.Instance.AddMoney(4);
 
         // Hlásime Spawneru smrť (dôležité pre wave!)
         onDeath?.Invoke();

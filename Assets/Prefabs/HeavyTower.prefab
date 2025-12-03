@@ -268,11 +268,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b40275be0aee414491b68a6a9724420, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Tower
-  range: 10
-  fireRate: 3
-  damage: 50
+  range: 12
+  fireRate: 2
+  damage: 35
   projectilePrefab: {fileID: 6129091996983225270, guid: c4d7bc140d4c3b24795ca3e832e6b383, type: 3}
-  burstDelay: 0.001
+  burstDelay: 0.0001
   zombieAimHeight: 2.8
   showShootPoints: 1
 --- !u!1001 &2215034197063412906
