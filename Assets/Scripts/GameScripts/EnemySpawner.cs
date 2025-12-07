@@ -43,6 +43,12 @@ public class EnemySpawner : MonoBehaviour
             GameObject zombie = Instantiate(enemyPrefab, transform.position, Quaternion.identity);
 
             EnemyHealth health = zombie.GetComponent<EnemyHealth>();
+            // Assign correct wave number and zombie type
+            if (health != null)
+            {
+                health.waveNumber = WaveManager.CurrentWaveNumber;
+                health.zombieType = enemyPrefab.name.Replace("(Clone)", "").Trim();
+            }
             if (health != null)
             {
                 health.onDeath += OnZombieDied; // Registrácia smrti

@@ -24,7 +24,22 @@ public class Tower : MonoBehaviour
     private Transform[] shootPoints;
     private bool initialized = false;
 
-    void Start() { InitializeShootPoints(); }
+    // Logging identifiers
+    public string towerId;            // unique ID per tower
+    public string towerType;          // readable type name
+
+    void Start()
+    {
+        InitializeShootPoints();
+
+        // Generate unique tower ID if missing
+        if (string.IsNullOrEmpty(towerId))
+            towerId = $"{gameObject.name}_{System.Guid.NewGuid().ToString()}";
+
+        // Assign tower type based on prefab name (fallback to object name)
+        if (string.IsNullOrEmpty(towerType))
+            towerType = gameObject.name.Replace("(Clone)", "").Trim();
+    }
     void OnEnable() { InitializeShootPoints(); }
 
     void InitializeShootPoints()
@@ -119,17 +134,46 @@ public class Tower : MonoBehaviour
     }
 
     void FireFromShootPoint(Transform shootPoint)
-{
-    Vector3 zombieTorso = target.position + Vector3.up * zombieAimHeight;
-    Vector3 shootDirection = (zombieTorso - shootPoint.position).normalized;
-
-    GameObject proj = Instantiate(projectilePrefab, shootPoint.position, Quaternion.LookRotation(shootDirection));
-    Projectile p = proj.GetComponent<Projectile>();
-    if (p != null)
     {
-        p.SetTarget(shootDirection, damage); // FIX: Smer namiesto target
+        Vector3 zombieTorso = target.position + Vector3.up * zombieAimHeight;
+        Vector3 shootDirection = (zombieTorso - shootPoint.position).normalized;
+
+        GameObject proj = Instantiate(projectilePrefab, shootPoint.position, Quaternion.LookRotation(shootDirection));
+        Projectile p = proj.GetComponent<Projectile>();
+        if (p != null)
+        {
+            // Mark this tower as the last hitter
+            var enemyHealth = target.GetComponent<EnemyHealth>();
+            if (enemyHealth != null)
+                enemyHealth.lastHitTowerId = towerId;
+
+            p.SetTarget(shootDirection, damage); // FIX: Smer namiesto target
+
+            // LOG: towerShot event
+            if (LogManager.Instance != null)
+            {
+                string zombieId = null;
+                enemyHealth = target.GetComponent<EnemyHealth>();
+                if (enemyHealth != null)
+                {
+                    // If EnemyHealth contains ZombieId, log it (otherwise empty)
+                    var idField = enemyHealth.GetType().GetField("zombieId");
+                    if (idField != null)
+                    {
+                        zombieId = idField.GetValue(enemyHealth)?.ToString();
+                    }
+                }
+
+                LogManager.Instance.LogGenericEvent(
+                    playerId: "player-default",
+                    eventName: $"towerShot_type_{towerType}",
+                    towerId: towerId,
+                    zombieId: zombieId,
+                    position: shootPoint.position
+                );
+            }
+        }
     }
-}
 
     void OnDrawGizmosSelected()
     {
@@ -147,7 +191,7 @@ public class Tower : MonoBehaviour
             {
                 Gizmos.color = Color.cyan;
                 Gizmos.DrawSphere(sp.position, 0.08f);
-                
+
                 // SMER NA TORZO!
                 Vector3 zombieTorso = target.position + Vector3.up * zombieAimHeight;
                 Gizmos.color = Color.green;

@@ -11,7 +11,7 @@ public class PlacementManager : MonoBehaviour
     [Tooltip("Heavy Tower - $200")]
     public GameObject heavyTowerPrefab;   // RapidFireCannon_2 prefab
 
-    private int[] towerCosts = {100, 150, 200};  // Matches prefab order above
+    private int[] towerCosts = { 100, 150, 200 };  // Matches prefab order above
 
     [Header("UI Buttons")]
     public Button basicButton;
@@ -23,30 +23,59 @@ public class PlacementManager : MonoBehaviour
     private bool placementMode = false;
 
     void Update()
-{
-    if (Input.GetMouseButtonDown(0) && placementMode && selectedPrefab != null)
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit))
+        if (Input.GetMouseButtonDown(0) && placementMode && selectedPrefab != null)
         {
-            BuildSpot spot = hit.collider.GetComponent<BuildSpot>();
-            if (spot != null && !spot.isOccupied)
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                // 💰 Spend money only when building is valid
-                if (GameManager.Instance.SpendMoney(selectedCost))
+                BuildSpot spot = hit.collider.GetComponent<BuildSpot>();
+                if (spot != null && !spot.isOccupied)
                 {
-                    spot.PlaceTower(selectedPrefab);
-                    TurretSell sell = spot.placedTower.GetComponent<TurretSell>();
-                    if (sell != null) sell.cost = selectedCost;
-                    Deselect();
+                    // 💰 Spend money only when building is valid
+                    if (GameManager.Instance.SpendMoney(selectedCost))
+                    {
+                        spot.PlaceTower(selectedPrefab);
+                        TurretSell sell = spot.placedTower.GetComponent<TurretSell>();
+                        if (sell != null) sell.cost = selectedCost;
+                        Deselect();
+                        // LOG: Tower built
+                        if (LogManager.Instance != null)
+                        {
+                            string towerType = "UnknownTower";
+                            if (selectedPrefab == basicTowerPrefab) towerType = "BasicTower";
+                            else if (selectedPrefab == rapidTowerPrefab) towerType = "RapidTower";
+                            else if (selectedPrefab == heavyTowerPrefab) towerType = "HeavyTower";
+
+                            GameObject placedTower = spot.placedTower;
+                            string uniqueTowerId = "";
+                            string finalTowerType = towerType;
+
+                            // Fetch Tower.cs metadata if present
+                            var towerComponent = placedTower.GetComponent<Tower>();
+                            if (towerComponent != null)
+                            {
+                                finalTowerType = towerComponent.towerType;
+                                uniqueTowerId = towerComponent.towerId;
+                            }
+
+                            // LOG tower built with unique ID + type
+                            LogManager.Instance.LogGenericEvent(
+                                playerId: "player-default",
+                                eventName: $"towerBuilt_type_{finalTowerType}_cost_{selectedCost}",
+                                towerId: uniqueTowerId,
+                                zombieId: null,
+                                position: spot.transform.position
+                            );
+                        }
+                    }
                 }
             }
         }
-    }
 
-    if (Input.GetMouseButtonDown(1))
-        Deselect();
-}
+        if (Input.GetMouseButtonDown(1))
+            Deselect();
+    }
 
 
     // Called by Basic button OnClick

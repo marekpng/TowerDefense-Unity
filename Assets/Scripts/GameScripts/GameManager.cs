@@ -28,6 +28,11 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // Initialize logging for a new game session
+        if (LogManager.Instance != null)
+        {
+            LogManager.Instance.StartNewSession("player-default");
+        }
         Time.timeScale = 1f;
         UpdateUI();
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
@@ -38,8 +43,22 @@ public class GameManager : MonoBehaviour
     {
         if (money >= amount)
         {
+            int oldMoney = money;
             money -= amount;
             UpdateUI();
+
+            // Log money spent
+            if (LogManager.Instance != null)
+            {
+                LogManager.Instance.LogGenericEvent(
+                    playerId: "player-default",
+                    eventName: $"moneySpent_old_{oldMoney}_new_{money}_amount_{amount}",
+                    towerId: null,
+                    zombieId: null,
+                    position: Vector3.zero
+                );
+            }
+
             return true;
         }
         return false;
@@ -47,8 +66,21 @@ public class GameManager : MonoBehaviour
 
     public void AddMoney(int amount)
     {
+        int oldMoney = money;
         money += amount;
         UpdateUI();
+
+        // Log money gained
+        if (LogManager.Instance != null)
+        {
+            LogManager.Instance.LogGenericEvent(
+                playerId: "player-default",
+                eventName: $"moneyGained_old_{oldMoney}_new_{money}_amount_{amount}",
+                towerId: null,
+                zombieId: null,
+                position: Vector3.zero
+            );
+        }
     }
 
     void UpdateUI()
@@ -60,8 +92,23 @@ public class GameManager : MonoBehaviour
     public void TakeDamage(int damage)
     {
         if (isGameOver) return;
+
+        int hpBefore = playerHP;
         playerHP -= damage;
         UpdateUI();
+
+        // Log player HP change (base hit)
+        if (LogManager.Instance != null)
+        {
+            LogManager.Instance.LogGenericEvent(
+                playerId: "player-default",
+                eventName: $"playerHit_hpBefore_{hpBefore}_hpAfter_{playerHP}_damage_{damage}",
+                towerId: null,
+                zombieId: null,
+                position: Vector3.zero
+            );
+        }
+
         if (playerHP <= 0)
             GameOver();
     }
@@ -70,12 +117,22 @@ public class GameManager : MonoBehaviour
     {
         isGameOver = true;
         Time.timeScale = 0f;
+        // Log game over event
+        if (LogManager.Instance != null)
+        {
+            LogManager.Instance.LogGameOver("player-default", false);
+        }
         if (gameOverPanel != null) gameOverPanel.SetActive(true);
     }
 
     public void Victory()
     {
         Time.timeScale = 0f;
+        // Log victory event
+        if (LogManager.Instance != null)
+        {
+            LogManager.Instance.LogGameOver("player-default", true);
+        }
         if (victoryPanel != null) victoryPanel.SetActive(true);
     }
 

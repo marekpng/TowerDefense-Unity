@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 public class WaveManager : MonoBehaviour
 {
     public static WaveManager Instance { get; private set; }
+    public static int CurrentWaveNumber = 0;
 
     [Header("UI")]
     public TMP_Text waveText;
@@ -102,6 +103,21 @@ public class WaveManager : MonoBehaviour
         if (currentWave >= totalWaves) return;
 
         WaveData wave = currentWaves[currentWave];
+        // Update global wave number so EnemyHealth can use it
+        CurrentWaveNumber = currentWave + 1;
+
+        // Log wave start
+        if (LogManager.Instance != null)
+        {
+            LogManager.Instance.LogGenericEvent(
+                playerId: "player-default",
+                eventName: $"waveStart_{CurrentWaveNumber}",
+                towerId: null,
+                zombieId: null,
+                position: Vector3.zero
+            );
+        }
+
         if (spawner != null)
             spawner.SpawnWave(wave.enemyCount, 1f / wave.spawnRate);
 
@@ -112,6 +128,18 @@ public class WaveManager : MonoBehaviour
 
     public void WaveEnded()
     {
+        // Log wave end
+        if (LogManager.Instance != null)
+        {
+            LogManager.Instance.LogGenericEvent(
+                playerId: "player-default",
+                eventName: $"waveEnd_{CurrentWaveNumber}",
+                towerId: null,
+                zombieId: null,
+                position: Vector3.zero
+            );
+        }
+
         waveActive = false;
         if (currentWave < totalWaves)
         {

@@ -6,6 +6,8 @@ public class Projectile : MonoBehaviour
     public float speed = 50f;
     public float lifetime = 1.0f;
 
+    public string towerId; // assigned by Tower.cs when firing
+
     private Vector3 direction;
     private float timer;
 
@@ -34,6 +36,17 @@ public class Projectile : MonoBehaviour
             EnemyHealth health = other.GetComponent<EnemyHealth>();
             if (health != null)
             {
+                // Log projectile hit (DPS tracking)
+                if (LogManager.Instance != null)
+                {
+                    LogManager.Instance.LogGenericEvent(
+                        playerId: "player-default",
+                        eventName: $"projectileHit_damage_{damage}",
+                        towerId: towerId,
+                        zombieId: health != null ? health.zombieId : null,
+                        position: transform.position
+                    );
+                }
                 health.TakeDamage(damage);
             }
             Destroy(gameObject);
