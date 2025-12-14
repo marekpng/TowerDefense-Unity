@@ -1,32 +1,58 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro; // 🔴 DÔLEŽITÉ
 using UnityEngine.SceneManagement;
 
 public class OptionsController : MonoBehaviour
 {
-    [Header("UI Elements")]
     public Slider audioSlider;
+    public TMP_Dropdown musicDropdown; // 🔴 ZMENA
     public Button backButton;
+
+    private SoundController soundController;
 
     void Start()
     {
-        // Auto-nájdi ak nie priradené
-        if (audioSlider == null) audioSlider = transform.Find("AudioSlider")?.GetComponent<Slider>();
-        if (backButton == null) backButton = transform.Find("BackButton")?.GetComponent<Button>();
+        soundController = FindObjectOfType<SoundController>();
 
-        // Načítaj uložené volume (default 0.5)
-        audioSlider.value = PlayerPrefs.GetFloat("AudioVolume", 0.5f);
-        audioSlider.onValueChanged.AddListener(SetAudioVolume);
+        if (audioSlider != null)
+        {
+            audioSlider.value = PlayerPrefs.GetFloat("AudioVolume", 0.5f);
+            audioSlider.onValueChanged.AddListener(SetAudioVolume);
+        }
 
-        // Back button
-        backButton.onClick.AddListener(BackToMenu);
+        if (musicDropdown != null && soundController != null)
+        {
+            musicDropdown.ClearOptions();
+
+            foreach (AudioClip clip in soundController.musicTracks)
+            {
+                musicDropdown.options.Add(new TMP_Dropdown.OptionData(clip.name));
+            }
+
+            musicDropdown.onValueChanged.AddListener(ChangeMusicTrack);
+
+            int savedTrack = PlayerPrefs.GetInt("MusicTrack", 0);
+            musicDropdown.value = savedTrack;
+            soundController.ChangeMusicTrack(savedTrack);
+        }
+
+        if (backButton != null)
+            backButton.onClick.AddListener(BackToMenu);
     }
 
     public void SetAudioVolume(float volume)
     {
-        AudioListener.volume = volume; // Nastav globálne volume (0-1)
-        PlayerPrefs.SetFloat("AudioVolume", volume); // Ulož pre budúce spustenia
-        PlayerPrefs.Save();
+        AudioListener.volume = volume;
+        soundController.SetVolume(volume);
+        PlayerPrefs.SetFloat("AudioVolume", volume);
+        
+    }
+
+    public void ChangeMusicTrack(int index)
+    {
+        soundController.ChangeMusicTrack(index);
+        PlayerPrefs.SetInt("MusicTrack", index);
     }
 
     public void BackToMenu()

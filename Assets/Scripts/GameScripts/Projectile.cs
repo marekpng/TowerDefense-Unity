@@ -2,54 +2,73 @@ using UnityEngine;
 
 public class Projectile : MonoBehaviour
 {
-    private int damage;
+    [Header("Stats")]
     public float speed = 50f;
-    public float lifetime = 1.0f;
+    public float turnSpeed = 3000f;
+    public float lifetime = 3f;
+    public float hitRadius = 2f; // ← NOVÉ: vzdialenosť, pri ktorej projektil trafí cieľ
 
-    public string towerId; // assigned by Tower.cs when firing
-
-    private Vector3 direction;
+    private int damage;
+    private Transform target;
     private float timer;
 
-    public void SetTarget(Vector3 dir, int dmg)
+    public string towerId;
+
+    public void SetTarget(Transform targetTransform, int dmg)
     {
-        direction = dir.normalized;
+        target = targetTransform;
         damage = dmg;
         timer = lifetime;
     }
 
     void Update()
     {
-        transform.Translate(direction * speed * Time.deltaTime, Space.World);
-
-        timer -= Time.deltaTime;
-        if (timer <= 0)
+        if (target == null)
         {
             Destroy(gameObject);
+            return;
         }
+
+        // NOVÉ: SNAP HIT na blízku vzdialenosť
+        if (Vector3.Distance(transform.position, target.position) <= hitRadius)
+        {
+            HitTarget();
+            return;
+        }
+
+        Vector3 direction = (target.position - transform.position).normalized;
+
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRotation,
+            turnSpeed * Time.deltaTime
+        );
+
+        transform.position += transform.forward * speed * Time.deltaTime;
+
+        timer -= Time.deltaTime;
+        if (timer <= 0f)
+            Destroy(gameObject);
+    }
+
+    private void HitTarget()
+    {
+        EnemyHealth health = target.GetComponent<EnemyHealth>();
+        if (health != null)
+        {
+            health.TakeDamage(damage);
+        }
+
+        Destroy(gameObject);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Enemy"))
-        {
-            EnemyHealth health = other.GetComponent<EnemyHealth>();
-            if (health != null)
-            {
-                // Log projectile hit (DPS tracking)
-                if (LogManager.Instance != null)
-                {
-                    LogManager.Instance.LogGenericEvent(
-                        playerId: "player-default",
-                        eventName: $"projectileHit_damage_{damage}",
-                        towerId: towerId,
-                        zombieId: health != null ? health.zombieId : null,
-                        position: transform.position
-                    );
-                }
-                health.TakeDamage(damage);
-            }
-            Destroy(gameObject);
-        }
+        if (!other.CompareTag("Enemy")) return;
+
+        if (other.transform != target) return;
+
+        HitTarget();
     }
 }

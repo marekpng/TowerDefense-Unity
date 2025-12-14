@@ -147,7 +147,7 @@ public class Tower : MonoBehaviour
             if (enemyHealth != null)
                 enemyHealth.lastHitTowerId = towerId;
 
-            p.SetTarget(shootDirection, damage); // FIX: Smer namiesto target
+            p.SetTarget(target, damage); // FIX: Smer namiesto target
 
             // LOG: towerShot event
             if (LogManager.Instance != null)
