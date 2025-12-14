@@ -135,6 +135,8 @@ public class Tower : MonoBehaviour
 
     void FireFromShootPoint(Transform shootPoint)
     {
+        SoundController.Instance.PlayShoot();
+
         Vector3 zombieTorso = target.position + Vector3.up * zombieAimHeight;
         Vector3 shootDirection = (zombieTorso - shootPoint.position).normalized;
 

@@ -83,6 +83,8 @@ public class EnemyHealth : MonoBehaviour
     {
         if (isDead) return;
         isDead = true;
+        SoundController.Instance.PlayEnemyDie();
+
 
         // Log zombie death
         if (LogManager.Instance != null)

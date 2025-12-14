@@ -147,6 +147,8 @@ public class GameManager : MonoBehaviour
     public void TakeDamage(int damage)
     {
         if (isGameOver) return;
+        SoundController.Instance.PlayBaseHit();
+
 
         int hpBefore = playerHP;
         playerHP -= damage;
@@ -170,6 +172,8 @@ public class GameManager : MonoBehaviour
     private void GameOver()
     {
         isGameOver = true;
+        SoundController.Instance.PlayGameOver();
+
         Time.timeScale = 0f;
         if (LogManager.Instance != null)
         {
@@ -181,6 +185,8 @@ public class GameManager : MonoBehaviour
     public void Victory()
     {
         Time.timeScale = 0f;
+        SoundController.Instance.PlayLevelComplete();
+
         if (LogManager.Instance != null)
         {
             LogManager.Instance.LogGameOver("player-default", true);

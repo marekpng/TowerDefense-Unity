@@ -32320,6 +32320,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8734504468247986735, guid: b88973f3a8441b84c923af1af432fe32, type: 3}
+      propertyPath: shootSFX
+      value: 
+      objectReference: {fileID: 8300000, guid: 0b781c43f8c435942b91ceead563d0d0, type: 3}
+    - target: {fileID: 8734504468247986735, guid: b88973f3a8441b84c923af1af432fe32, type: 3}
+      propertyPath: baseHitSFX
+      value: 
+      objectReference: {fileID: 8300000, guid: 0c7bba82f4c710143942719cd3e7983c, type: 3}
+    - target: {fileID: 8734504468247986735, guid: b88973f3a8441b84c923af1af432fe32, type: 3}
+      propertyPath: enemyDieSFX
+      value: 
+      objectReference: {fileID: 8300000, guid: bc5a9027ee635f542ab5917cb839938a, type: 3}
+    - target: {fileID: 8734504468247986735, guid: b88973f3a8441b84c923af1af432fe32, type: 3}
+      propertyPath: gameOverSFX
+      value: 
+      objectReference: {fileID: 8300000, guid: f5def16bb127c1b4f861d32d8040dd37, type: 3}
+    - target: {fileID: 8734504468247986735, guid: b88973f3a8441b84c923af1af432fe32, type: 3}
+      propertyPath: levelCompleteSFX
+      value: 
+      objectReference: {fileID: 8300000, guid: 94362ea7b0a86654b97e909f72665007, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
