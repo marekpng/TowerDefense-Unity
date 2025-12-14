@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
@@ -18,7 +19,21 @@ public class GameManager : MonoBehaviour
     public GameObject gameOverPanel;
     public GameObject victoryPanel;
 
+    // --- NOVÉ: Pause a Settings ---
+    [Header("Pause & Settings")]
+    public GameObject pausePanel;
+    public GameObject settingsPanel;
+
+    public Button resumeButton;
+    public Button settingsButton;
+    public Button mainMenuButton;
+
+    public Slider volumeSlider;
+    public TMP_Dropdown trackDropdown;
+    public Button settingsBackButton;
+
     private bool isGameOver = false;
+    private bool isPaused = false;
 
     void Awake()
     {
@@ -28,7 +43,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        // Initialize logging for a new game session
+        // pôvodný kód
         if (LogManager.Instance != null)
         {
             LogManager.Instance.StartNewSession("player-default");
@@ -37,8 +52,50 @@ public class GameManager : MonoBehaviour
         UpdateUI();
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (victoryPanel != null) victoryPanel.SetActive(false);
+
+        // --- NOVÉ: Inicializácia Pause menu ---
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+
+        if (resumeButton != null) resumeButton.onClick.AddListener(ResumeGame);
+        if (settingsButton != null) settingsButton.onClick.AddListener(OpenSettings);
+        if (mainMenuButton != null) mainMenuButton.onClick.AddListener(MainMenu);
+
+        if (settingsBackButton != null) settingsBackButton.onClick.AddListener(CloseSettings);
+
+        if (volumeSlider != null)
+        {
+            volumeSlider.value = PlayerPrefs.GetFloat("AudioVolume", 0.5f);
+            volumeSlider.onValueChanged.AddListener(SetVolume);
+        }
+
+        if (trackDropdown != null && SoundController.Instance != null)
+        {
+            trackDropdown.ClearOptions();
+            var options = new System.Collections.Generic.List<string>();
+            for (int i = 0; i < SoundController.Instance.musicTracks.Length; i++)
+                options.Add(SoundController.Instance.musicTracks[i].name);
+            trackDropdown.AddOptions(options);
+
+            int savedTrack = PlayerPrefs.GetInt("MusicTrack", 0);
+            trackDropdown.value = savedTrack;
+            trackDropdown.onValueChanged.AddListener(SetTrack);
+
+            SoundController.Instance.ChangeMusicTrack(savedTrack); // spusti uložený track
+        }
     }
 
+    void Update()
+    {
+        // --- NOVÉ: ESC na pauzu ---
+        if (Input.GetKeyDown(KeyCode.Escape) && !isGameOver)
+        {
+            if (isPaused) ResumeGame();
+            else PauseGame();
+        }
+    }
+
+    // --- PÔVODNÉ FUNKCIE ---
     public bool SpendMoney(int amount)
     {
         if (money >= amount)
@@ -47,7 +104,6 @@ public class GameManager : MonoBehaviour
             money -= amount;
             UpdateUI();
 
-            // Log money spent
             if (LogManager.Instance != null)
             {
                 LogManager.Instance.LogGenericEvent(
@@ -70,7 +126,6 @@ public class GameManager : MonoBehaviour
         money += amount;
         UpdateUI();
 
-        // Log money gained
         if (LogManager.Instance != null)
         {
             LogManager.Instance.LogGenericEvent(
@@ -97,7 +152,6 @@ public class GameManager : MonoBehaviour
         playerHP -= damage;
         UpdateUI();
 
-        // Log player HP change (base hit)
         if (LogManager.Instance != null)
         {
             LogManager.Instance.LogGenericEvent(
@@ -117,7 +171,6 @@ public class GameManager : MonoBehaviour
     {
         isGameOver = true;
         Time.timeScale = 0f;
-        // Log game over event
         if (LogManager.Instance != null)
         {
             LogManager.Instance.LogGameOver("player-default", false);
@@ -128,7 +181,6 @@ public class GameManager : MonoBehaviour
     public void Victory()
     {
         Time.timeScale = 0f;
-        // Log victory event
         if (LogManager.Instance != null)
         {
             LogManager.Instance.LogGameOver("player-default", true);
@@ -136,7 +188,6 @@ public class GameManager : MonoBehaviour
         if (victoryPanel != null) victoryPanel.SetActive(true);
     }
 
-    // Buttony
     public void RestartLevel()
     {
         Time.timeScale = 1f;
@@ -149,10 +200,9 @@ public class GameManager : MonoBehaviour
     public void MainMenu()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("MainMenu"); // Tvoja hlavná menu scéna
+        SceneManager.LoadScene("MainMenu");
     }
 
-    // NOVÉ: Automatický Next Level podľa aktuálnej scény
     public void NextLevel()
     {
         Time.timeScale = 1f;
@@ -164,10 +214,56 @@ public class GameManager : MonoBehaviour
             "Level1" => "Level2",
             "Level2" => "Level3",
             "Level3" => "Level4",
-            "Level4" => "MainMenu", // Po Level 4 → späť do menu
-            _ => "MainMenu" // Bezpečnostný fallback
+            "Level4" => "MainMenu",
+            _ => "MainMenu"
         };
 
         SceneManager.LoadScene(nextScene);
+    }
+
+    // --- NOVÉ FUNKCIE PRE PAUSE MENU ---
+    void PauseGame()
+    {
+        isPaused = true;
+        Time.timeScale = 0f;
+        if (pausePanel != null) pausePanel.SetActive(true);
+    }
+
+    void ResumeGame()
+    {
+        isPaused = false;
+        Time.timeScale = 1f;
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+    }
+
+    void OpenSettings()
+    {
+        if (pausePanel != null) pausePanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(true);
+    }
+
+    void CloseSettings()
+    {
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+        if (pausePanel != null) pausePanel.SetActive(true);
+    }
+
+    void SetVolume(float value)
+    {
+        PlayerPrefs.SetFloat("AudioVolume", value);
+        PlayerPrefs.Save();
+
+        if (SoundController.Instance != null)
+            SoundController.Instance.SetVolume(value);
+    }
+
+    void SetTrack(int index)
+    {
+        PlayerPrefs.SetInt("MusicTrack", index);
+        PlayerPrefs.Save();
+
+        if (SoundController.Instance != null)
+            SoundController.Instance.ChangeMusicTrack(index);
     }
 }
