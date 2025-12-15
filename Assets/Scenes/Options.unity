@@ -154,6 +154,12 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 11a1cb141a2c9034a87666164fbc85d1, type: 3}
   - {fileID: 8300000, guid: c558403182d026c46aa3bd1c342a883a, type: 3}
   - {fileID: 8300000, guid: 8db79200f24037c4cb4584f4a43bff76, type: 3}
+  shootSFX: {fileID: 0}
+  enemyDieSFX: {fileID: 0}
+  baseHitSFX: {fileID: 0}
+  levelCompleteSFX: {fileID: 0}
+  gameOverSFX: {fileID: 0}
+  sfxVolume: 1
 --- !u!82 &24575442
 AudioSource:
   m_ObjectHideFlags: 0
@@ -2117,7 +2123,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Option A
+  m_text: Music Options
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
